@@ -1,0 +1,139 @@
+---
+title: "Non-linear Least Squares"
+author: "Natalie Smith"
+format: 
+  html:
+    embed-resources: true
+    code-fold: true
+    toc: true
+execute: 
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+library(tidyverse)
+library(lterdatasampler)
+library(knitr)
+library(broom)
+library(investr)
+library(kableExtra)
+library(nlraa)
+library(janitor)
+```
+
+
+```{r}
+# Access the data from SM package in NLRAA
+data <- sm
+
+```
+Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. You will help farmers make predictions on their yields by running non-linear least squares on experimental growth data for three grains in Greece. 
+
+Additionally, you will assess the response of the grains to fertlizer. 
+
+You will recreate the model examples of Archontoulis, S.V. and Miguez, F.E. (2015). Read the paper to acquire more insight into nonlinear least squares and its application in agriculture. 
+
+Write a brief description of the data including variable names and structure. 
+
+Variables: 
+DOY: Day of Year
+Block: location?
+Input: 
+  High = weekly irrigation & applicaton of 200 kg N ha^-1 (fertilizer)
+  Low = biweekly irrigation.& application of 50 kg N ha^-1 (fertilizer)
+Crop: 
+  (F) fiber sorghum
+  (S) sweet sorghum 
+  (M) maize 
+Yield:
+
+Create finalized sumary table of the data in your report. 
+
+Choosing a model is step 1 of our NLS process. The paper describes 77 potential functions. Let’s use the Beta function from Table 1 Equation 2.5 of Archontoulis, S.V. and Miguez, F.E. (2015). 
+Use the Beta function from Table 1 Eqation 2.5:
+
+Briefly describe what each parameter generally means: 
+Y is the response variable (e.g., biomass)
+t is the explanatory variable (e.g., time)
+Yasym or Ymax is the asymptotic or the maximum Y value, respectively
+tm is the inflection point at which the growth rate is maximized
+k controls the steepness of the curve
+v deals with the asymmetric growth (if v = 1, then Richards' equation becomes logistic)
+a and b are parameters that determine the shape of the curve
+te is the time when Y = Yasym
+tc is the critical time for a switch-off to occur (e.g., critical photoperiod)
+n is a parameter that determines the sharpness of the response
+
+
+
+```{r}
+## ASK: did i need to do this step?
+#clean the data
+crop_data <- data %>% 
+  janitor::clean_names() %>%
+  filter(!is.na(crop)) %>% 
+  group_by(crop) %>% 
+  drop_na()
+
+crop_f <- crop_data %>% 
+  filter(crop == "F")
+
+crop_s <- crop_data %>% 
+  filter(crop == "S")
+
+crop_m <- crop_data %>% 
+  filter(crop == "M")
+
+```
+
+NOTE from paper:
+There are three crops, two levels of agronomic input, and four blocks, which results in 24 possible combinations (experimental units). The model was fitted to every experimental unit separately, and apparent convergence was obtained for only 10 experiment units. This indicates that some modifications are needed (see below). Checking model assumptions can be useful for diagnosing the problem (Fig. 5). In this case, it stands out that there is a concentration of points at low fitted values, which indicates overprediction (i.e., bias) at low values (Fig. 5), suggesting that a different function might work better.
+
+Write a function in R to model the Beta Function.
+
+predict biomass based on day of year - WHAT IS 
+BIOMASS THO?!
+```{r}
+#create beta function:
+beta_function <- function(t, ymax, te, tt, tm) {
+  y <- ymax * (1 + (te - t / te - tm) * (t / te) * exp(te / tt - tm))
+  return(y)
+}
+
+# Add controls
+controls=nls.control(maxiter=100)
+
+guess_model <- lm(log(yield) ~ log(doy), data = crop_data)
+
+
+#Run nls
+nls_one<-nls(weight~length_to_weight(a,b,SV_length),
+             data=lizard_comb,
+             start=list(a=exp(coefficients(guess_model))[1],b=coefficients(guess_model)[2]),
+             control=controls)
+
+#Set up the predictions for graphing
+length_step<- seq(from=min(lizard_comb$SV_length),to=max(lizard_comb$SV_length),length.out=100)
+
+
+predictions<-length_to_weight(a=coefficients(nls_one)[1],b=coefficients(nls_one)[2],length_step)
+
+
+#collect the predictions into one df
+dfplot=data.frame(predict=predictions,length=length_step)
+
+# Make a graph
+ggplot(dfplot,aes(x=length,y=predict))+
+  geom_line(color="black")+
+  geom_point(data=lizard_comb,aes(x=SV_length,y=weight,color=sex))
+```
+
+
+The paper uses option 4 for guesses by creating a starting grid to show off a new function. 
+They also indicate guesses can be acquired by examining the data. 
+Create a plot against the data to find some potential starting values for your nls analysis. 
+In your final report include the code, but NOT the plot you used to feed guesses.
+Filter out observations from the sorghum fields with high inputs and run an NLS model to predict yield for any given day of the year. 
+Make a good looking table showing the selected parameter 
