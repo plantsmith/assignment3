@@ -16,6 +16,7 @@ library(tidyverse)
 library(here)
 library(tidymodels) 
 library(ggplot2)
+library(patchwork)
 ```
 
 
@@ -29,28 +30,135 @@ palmetto <- p_df %>%
   mutate(species=as_factor(species)) %>% 
   drop_na()
 ```
-
-```{r}
-#explatory graphs: visualizations (with figure captions) in  height, canopy length, canopy width, and green leaves for the two species. If you prefer, combine the figures into a compound figure using patchwork or cowplot. Below your data visualizations, add a sentence or two with a takeaway from the plots, e.g., based on these plots, which predictor variables are more likely to help classify species correctly?
-
-ggplot(palmetto, aes(x = as.factor(species), y = green_lvs)) +
-  geom_boxplot() +
-  scale_x_discrete(labels = c("1" = "S.repens", "2" = "S.etonia")) +
-  labs(x = " ")
-
-
-ggplot(palmetto, aes(x= as_factor(species), y = height))+
-  geom_boxplot()
-
-ggplot(palmetto, aes(x= as_factor(species), y = length))+
-  geom_boxplot()
-
-ggplot(palmetto, aes(x= as_factor(species), y = width))+
-  geom_boxplot()
-
-```
 1 = S. repens
 2 = S. etonia
+
+# Exploratory Plots:
+Add a sentence or two with a takeaway from the plots, e.g., based on these plots, which predictor variables are more likely to help classify species correctly?
+
+```{r}
+#Species Boxplot ~ Green Leaves
+leaves_plot <- ggplot(palmetto, 
+                     aes(x =as.factor(species),
+                         y = green_lvs)) +
+  geom_boxplot(fill = "#ADD8E6", color = "#2E75B6",
+               alpha = 0.8, 
+               outlier.color = "#FF5733",
+               outlier.shape = 16, 
+               outlier.size = 1) +  
+  scale_x_discrete(labels =
+                     expression(italic("S.repens"),
+                                italic("S.etonia"))) + 
+  labs(x = "Species", y = "Green Leaves") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(size = 10),
+    axis.title.x = element_text(size = 10),
+    axis.text = element_text(size = 10),
+    legend.position = "none"
+  )
+leaves_plot
+```
+
+```{r}
+#Species Boxplot ~ Canopy Height
+height_plot <- ggplot(palmetto, 
+                     aes(x =as.factor(species),
+                         y = height)) +
+  geom_boxplot(fill = "#ADD8E6", color = "#2E75B6",
+               alpha = 0.8, 
+               outlier.color = "#FF5733",
+               outlier.shape = 16, 
+               outlier.size = 1) +  
+  scale_x_discrete(labels =
+                     expression(italic("S.repens"),
+                                italic("S.etonia"))) + 
+  labs(x = "Species", y = "Canopy Height") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(size = 10),
+    axis.title.x = element_text(size = 10),
+    axis.text = element_text(size = 10),
+    legend.position = "none"
+  )
+height_plot
+```
+
+```{r}
+#Species Boxplot ~ Canopy Length
+length_plot <- ggplot(palmetto, 
+                     aes(x =as.factor(species),
+                         y = length)) +
+  geom_boxplot(fill = "#ADD8E6", color = "#2E75B6",
+               alpha = 0.8, 
+               outlier.color = "#FF5733",
+               outlier.shape = 16, 
+               outlier.size = 1) +  
+  scale_x_discrete(labels =
+                     expression(italic("S.repens"),
+                                italic("S.etonia"))) + 
+  labs(x = "Species", y = "Canopy Length") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(size = 10),
+    axis.title.x = element_text(size = 10),
+    axis.text = element_text(size = 10),
+    legend.position = "none"
+  )
+length_plot
+```
+
+```{r}
+#Species Boxplot ~ Canopy Width
+width_plot <- ggplot(palmetto, 
+                     aes(x =as.factor(species),
+                         y = width)) +
+  geom_boxplot(fill = "#ADD8E6", color = "#2E75B6",
+               alpha = 0.8, 
+               outlier.color = "#FF5733",
+               outlier.shape = 16, 
+               outlier.size = 1) +  
+  scale_x_discrete(labels =
+                     expression(italic("S.repens"),
+                                italic("S.etonia"))) + 
+  labs(x = "Species", y = "Canopy Width") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(size = 10),
+    axis.title.x = element_text(size = 10),
+    axis.text = element_text(size = 10),
+    legend.position = "none"
+  )
+width_plot
+
+```
+
+# Combine Plots:
+
+```{r}
+plot1 <- leaves_plot + 
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(axis.title.x = element_blank())
+
+plot2 <- height_plot +
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(axis.title.x = element_blank())
+
+plot3 <- length_plot +
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(axis.title.x = element_blank())
+
+plot4 <- width_plot +
+  theme(axis.text.y = element_text(size = 8)) +
+  theme(axis.title.x = element_blank())
+```
+
+```{r}
+combinedplot <- plot1 + plot2 + plot3 + plot4
+combinedplot
+```
+
+Ok, DO WORK:
 
 ```{r}
 # Define formulas:
@@ -157,16 +265,20 @@ accuracy	binary	0.9123879
 accuracy	binary	0.896903	
 
 ```{r}
-#ROC
-roc_df <- roc_curve(p_test_predict1, truth = species, .pred_0)
+#ROC 1
+roc_df1 <- roc_curve(p_test_predict1, truth = species, .pred_1)
+autoplot(roc_df)
+
+#ROC 2
+roc_df2 <- roc_curve(p_test_predict2, truth = species, .pred_1)
 autoplot(roc_df)
 ```
 
 
 ```{r}
 ### Calculate area under curve - 50% is random guessing, 100% is perfect classifier
-yardstick::roc_auc(p_test_predict1, truth = species, .pred_0)
-yardstick::roc_auc(p_test_predict2, truth = species, .pred_0)
+yardstick::roc_auc(p_test_predict1, truth = species, .pred_1)
+yardstick::roc_auc(p_test_predict2, truth = species, .pred_1)
 ```
 
 
@@ -176,7 +288,7 @@ set.seed(10101)
 p_train_folds <- vfold_cv(p_train_df, v = 10)
 p_train_folds
 ```
-
+Question: is this the same thing we did above?
 ```{r}
 #workflow
 blr_wf1 <- workflow() %>%  
@@ -207,6 +319,7 @@ collect_metrics(blr_fit_folds1)
 
 #accuracy: mean 0.9174543	n 10	std: 0.0025763289
 #roc: mean 0.9732677	n 10	std: 0.0008184978 
+
 collect_metrics(blr_fit_folds2)
 #accuracy: mean 0.8997234	n 10	std 0.003419435
 #roc: mean 0.9638196	n 10	std 0.001191673
@@ -214,7 +327,7 @@ collect_metrics(blr_fit_folds2)
 #ROC close to 100 means, close to a perfect classifier. 
 ```
 Model 1:
-accuracy	binary	0.9174543	10	0.0025763289	
+accuracy	binary	0.9174543	10	0.0025763289
 roc_auc	binary	0.9732677	10	0.0008184978	
 
 Model 2:
@@ -239,49 +352,6 @@ blr_wf1 <- workflow() %>%
 blr_fit_folds <- blr_wf1 %>%
   fit_resamples(p_folds)
 ```
-
-
-
-```{r}
-# Calculate probabilities for each plant in the original dataset
-predicted_probabilities <- predict(final_model, new_data = original_dataset, type = "prob")
-
-# Extract probabilities for each species
-species_probabilities <- predicted_probabilities %>%
-  as.data.frame() %>%
-  mutate(predicted_species = ifelse(.pred_class == "SpeciesA", 1, 0)) # Assuming 1 represents SpeciesA and 0 represents SpeciesB
-
-# Add a column for predicted species based on 50% cutoff
-species_probabilities <- species_probabilities %>%
-  mutate(predicted_species = ifelse(.pred_class >= 0.5, "SpeciesA", "SpeciesB")) # Change 0.5 to any desired cutoff
-
-# Combine with original dataset
-combined_data <- cbind(original_dataset, species_probabilities)
-
-# Calculate number of plants correctly and incorrectly classified
-classification_results <- combined_data %>%
-  group_by(species, predicted_species) %>%
-  summarize(count = n()) %>%
-  ungroup() %>%
-  mutate(correctly_classified = ifelse(species == predicted_species, count, 0),
-         incorrectly_classified = ifelse(species != predicted_species, count, 0))
-
-# Calculate percentage correctly classified for each species
-classification_results <- classification_results %>%
-  group_by(species) %>%
-  summarize(total_count = sum(count),
-            total_correct = sum(correctly_classified),
-            percent_correct = (total_correct / total_count) * 100)
-
-# Create a finalized table
-final_table <- classification_results %>%
-  mutate(species = factor(species),
-         percent_correct = paste0(round(percent_correct, 2), "%")) %>%
-  kable(caption = "Classification Results Based on Logistic Regression Model",
-        col.names = c("Species", "Total Count", "Correctly Classified", "Incorrectly Classified", "% Correctly Classified"))
-
-```
-
 
 
 
