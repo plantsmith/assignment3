@@ -49,7 +49,7 @@ Crop:
   (F) fiber sorghum
   (S) sweet sorghum 
   (M) maize 
-Yield:
+Yield: Biomass
 
 Create finalized summary table of the data in your report. 
 
@@ -67,10 +67,8 @@ te is the time when Y = Yasym
 tc is the critical time for a switch-off to occur (e.g., critical photoperiod)
 n is a parameter that determines the sharpness of the response
 
-QUESTIONS: ### did i need to do this step / separate the crops or just group by?
 
 ```{r}
-
 #clean the data
 crop_data <- data %>% 
   janitor::clean_names() %>%
@@ -79,38 +77,25 @@ crop_data <- data %>%
   group_by(crop) %>% 
   drop_na()
 
+#BUT ALSO YOU CANNOT LOG 0 so add + 1 to yield but maybe im way off
 crop_data <- crop_data %>%
   mutate(yield = yield + 1)
 
-crop_f <- crop_data %>% 
-  filter(crop == "F")
-
-crop_s <- crop_data %>% 
-  filter(crop == "S")
-
-crop_m <- crop_data %>% 
-  filter(crop == "M")
-
 ```
 
-NOTE from paper:
-There are three crops, two levels of agronomic input, and four blocks, which results in 24 possible combinations (experimental units). The model was fitted to every experimental unit separately, and apparent convergence was obtained for only 10 experiment units. This indicates that some modifications are needed (see below). Checking model assumptions can be useful for diagnosing the problem (Fig. 5). In this case, it stands out that there is a concentration of points at low fitted values, which indicates overprediction (i.e., bias) at low values (Fig. 5), suggesting that a different function might work better.
+Notes from paper:
+* Three crops
+* two levels of agronomic input
+* four blocks
+* = 24 possible combinations 
 
 Write a function in R to model the Beta Function.
-
-QUESTIONS: 
-WHERE IS THE METADATA:
-predict biomass based on day of year / facet input 
-- WHAT IS BIOMASS THO?!
-OK ASSUMING BIOMASS IS YEILD 
-
-BUT ALSO YOU CANNOT LOG 0 so add + 1 to yeild but maybe im way off
 
 So i actually think my issue is - I dont know what the variables mean so Idk know to input them?
 ```{r}
 #create beta function:
 beta_function <- function(t, ymax, te, tt, tm) {
-  y <- ymax * (1 + (te - t / te - tm) * (t / te) * exp(te / tt - tm))
+  y <- ymax * ((1 + (te - t / te - tm)) * ((t / te)^(te / tt - tm)))
   return(y)
 }
 
@@ -120,13 +105,15 @@ controls=nls.control(maxiter=100)
 #guess model
 guess_model <- lm(log(yield) ~ log(doy), data = crop_data)
 
-
 # Run nls
-nls_one <- nls(yield ~ beta_function(doy, ymax, te, tt, tm),
-               data = crop_data,
-               start = list(ymax = exp(coefficients(guess_model)[1]), 
-                            te = 1, tt = 1, tm = 1),
-               control = controls)
+nls_one <- nls(yield ~ beta_function(t, ymax, te, tt, tmm),
+               data = crop_data
+               
+
+# nls_one<-nls(weight~length_to_weight(a,b,SV_length),
+#              data=lizard_comb,
+#              start=list(a=exp(coefficients(guess_model))[1],b=coefficients(guess_model)[2]),
+#              control=controls)
 
 # # predictions should be something like this:
 # predictions <- data.frame(doy = seq(min(crop_data$doy), max(crop_data$doy), length.out = 100))
@@ -138,11 +125,4 @@ nls_one <- nls(yield ~ beta_function(doy, ymax, te, tt, tm),
 
 ```
 
-NOTES:
 
-The paper uses option 4 for guesses by creating a starting grid to show off a new function. 
-They also indicate guesses can be acquired by examining the data. 
-Create a plot against the data to find some potential starting values for your nls analysis. 
-In your final report include the code, but NOT the plot you used to feed guesses.
-Filter out observations from the sorghum fields with high inputs and run an NLS model to predict yield for any given day of the year. 
-Make a good looking table showing the selected parameter 
