@@ -11,6 +11,12 @@ execute:
   warning: false
   message: false
 ---
+# Overview: 
+Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. You will help farmers make predictions on their yields by running non-linear least squares on experimental growth data for three grains in Greece. 
+
+Additionally, you will assess the response of the grains to fertlizer. 
+
+You will recreate the model examples of Archontoulis, S.V. and Miguez, F.E. (2015). Read the paper to acquire more insight into nonlinear least squares and its application in agriculture. 
 
 ```{r}
 library(tidyverse)
@@ -27,19 +33,15 @@ library(janitor)
 ```{r}
 # Access the data from SM package in NLRAA
 data <- sm
-
 ```
-Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. You will help farmers make predictions on their yields by running non-linear least squares on experimental growth data for three grains in Greece. 
 
-Additionally, you will assess the response of the grains to fertlizer. 
-
-You will recreate the model examples of Archontoulis, S.V. and Miguez, F.E. (2015). Read the paper to acquire more insight into nonlinear least squares and its application in agriculture. 
+# Variables:
 
 Write a brief description of the data including variable names and structure. 
 
 Variables: 
 DOY: Day of Year
-Block: location?
+Block: location
 Input: 
   High = weekly irrigation & applicaton of 200 kg N ha^-1 (fertilizer)
   Low = biweekly irrigation.& application of 50 kg N ha^-1 (fertilizer)
@@ -49,15 +51,14 @@ Crop:
   (M) maize 
 Yield:
 
-Create finalized sumary table of the data in your report. 
+Create finalized summary table of the data in your report. 
 
-Choosing a model is step 1 of our NLS process. The paper describes 77 potential functions. Let’s use the Beta function from Table 1 Equation 2.5 of Archontoulis, S.V. and Miguez, F.E. (2015). 
-Use the Beta function from Table 1 Eqation 2.5:
+Use the Beta function:
 
 Briefly describe what each parameter generally means: 
 Y is the response variable (e.g., biomass)
 t is the explanatory variable (e.g., time)
-Yasym or Ymax is the asymptotic or the maximum Y value, respectively
+Ymax is the asymptotic or the maximum Y value, respectively
 tm is the inflection point at which the growth rate is maximized
 k controls the steepness of the curve
 v deals with the asymmetric growth (if v = 1, then Richards' equation becomes logistic)
@@ -66,16 +67,20 @@ te is the time when Y = Yasym
 tc is the critical time for a switch-off to occur (e.g., critical photoperiod)
 n is a parameter that determines the sharpness of the response
 
-
+QUESTIONS: ### did i need to do this step / separate the crops or just group by?
 
 ```{r}
-## ASK: did i need to do this step?
+
 #clean the data
 crop_data <- data %>% 
   janitor::clean_names() %>%
+  mutate(yield = yield + 1) %>% 
   filter(!is.na(crop)) %>% 
   group_by(crop) %>% 
   drop_na()
+
+crop_data <- crop_data %>%
+  mutate(yield = yield + 1)
 
 crop_f <- crop_data %>% 
   filter(crop == "F")
@@ -93,8 +98,15 @@ There are three crops, two levels of agronomic input, and four blocks, which res
 
 Write a function in R to model the Beta Function.
 
-predict biomass based on day of year - WHAT IS 
-BIOMASS THO?!
+QUESTIONS: 
+WHERE IS THE METADATA:
+predict biomass based on day of year / facet input 
+- WHAT IS BIOMASS THO?!
+OK ASSUMING BIOMASS IS YEILD 
+
+BUT ALSO YOU CANNOT LOG 0 so add + 1 to yeild but maybe im way off
+
+So i actually think my issue is - I dont know what the variables mean so Idk know to input them?
 ```{r}
 #create beta function:
 beta_function <- function(t, ymax, te, tt, tm) {
@@ -105,31 +117,28 @@ beta_function <- function(t, ymax, te, tt, tm) {
 # Add controls
 controls=nls.control(maxiter=100)
 
+#guess model
 guess_model <- lm(log(yield) ~ log(doy), data = crop_data)
 
 
-#Run nls
-nls_one<-nls(weight~length_to_weight(a,b,SV_length),
-             data=lizard_comb,
-             start=list(a=exp(coefficients(guess_model))[1],b=coefficients(guess_model)[2]),
-             control=controls)
+# Run nls
+nls_one <- nls(yield ~ beta_function(doy, ymax, te, tt, tm),
+               data = crop_data,
+               start = list(ymax = exp(coefficients(guess_model)[1]), 
+                            te = 1, tt = 1, tm = 1),
+               control = controls)
 
-#Set up the predictions for graphing
-length_step<- seq(from=min(lizard_comb$SV_length),to=max(lizard_comb$SV_length),length.out=100)
-
-
-predictions<-length_to_weight(a=coefficients(nls_one)[1],b=coefficients(nls_one)[2],length_step)
-
-
-#collect the predictions into one df
-dfplot=data.frame(predict=predictions,length=length_step)
+# # predictions should be something like this:
+# predictions <- data.frame(doy = seq(min(crop_data$doy), max(crop_data$doy), length.out = 100))
+#
+# #collect the predictions into one df 
+# dfplot=data.frame(predict=predictions,length=length_step)
 
 # Make a graph
-ggplot(dfplot,aes(x=length,y=predict))+
-  geom_line(color="black")+
-  geom_point(data=lizard_comb,aes(x=SV_length,y=weight,color=sex))
+
 ```
 
+NOTES:
 
 The paper uses option 4 for guesses by creating a starting grid to show off a new function. 
 They also indicate guesses can be acquired by examining the data. 
