@@ -107,6 +107,7 @@ p_train_df <- training(p_split)
 p_test_df <- testing(p_split)
 
 ```
+
 # if i set up a workflow below, do I have to do this step?
 ```{r}
 #binary logistic regression model with our data
@@ -127,6 +128,47 @@ blr_fit1
 blr_fit2
 ```
 First model is better - lower AIC
+
+```{r}
+# use our fitted model from the training set on the test set #1
+p_test_predict1 <- p_test_df %>%
+  mutate(predict(blr_fit1, new_data = p_test_df)) %>%
+  mutate(predict(blr_fit1, new_data = ., type = 'prob'))
+
+# use our fitted model from the training set on the test set #2
+p_test_predict2 <- p_test_df %>%
+  mutate(predict(blr_fit2, new_data = p_test_df)) %>%
+  mutate(predict(blr_fit2, new_data = ., type = 'prob'))
+
+```
+
+```{r}
+#accuracy #1
+accuracy(p_test_predict1, truth = species, estimate = .pred_class)
+
+#accuracy #2
+accuracy(p_test_predict2, truth = species, estimate = .pred_class)
+
+```
+
+(1)
+accuracy	binary	0.9123879	
+(2)
+accuracy	binary	0.896903	
+
+```{r}
+#ROC
+roc_df <- roc_curve(p_test_predict1, truth = species, .pred_0)
+autoplot(roc_df)
+```
+
+
+```{r}
+### Calculate area under curve - 50% is random guessing, 100% is perfect classifier
+yardstick::roc_auc(p_test_predict1, truth = species, .pred_0)
+yardstick::roc_auc(p_test_predict2, truth = species, .pred_0)
+```
+
 
 ```{r}
 #FOLDs: 
