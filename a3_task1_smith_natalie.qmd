@@ -11,12 +11,23 @@ execute:
   message: false
 ---
 
+# Overview: 
+describe the data
+question(s) to be addressed in your analysis
+citation of the dataset
+
+NOTE: 
+1 = S. repens
+2 = S. etonia
+
 ```{r}
 library(tidyverse) 
 library(here)
 library(tidymodels) 
 library(ggplot2)
 library(patchwork)
+library(broom)
+library(kableExtra)
 ```
 
 
@@ -30,11 +41,10 @@ palmetto <- p_df %>%
   mutate(species=as_factor(species)) %>% 
   drop_na()
 ```
-1 = S. repens
-2 = S. etonia
 
 # Exploratory Plots:
-Add a sentence or two with a takeaway from the plots, e.g., based on these plots, which predictor variables are more likely to help classify species correctly?
+Add a sentence or two with a takeaway from the plots:
+based on these plots, which predictor variables are more likely to help classify species correctly?
 
 ```{r}
 #Species Boxplot ~ Green Leaves
@@ -57,7 +67,7 @@ leaves_plot <- ggplot(palmetto,
     axis.text = element_text(size = 10),
     legend.position = "none"
   )
-leaves_plot
+# leaves_plot
 ```
 
 ```{r}
@@ -81,7 +91,7 @@ height_plot <- ggplot(palmetto,
     axis.text = element_text(size = 10),
     legend.position = "none"
   )
-height_plot
+# height_plot
 ```
 
 ```{r}
@@ -105,7 +115,7 @@ length_plot <- ggplot(palmetto,
     axis.text = element_text(size = 10),
     legend.position = "none"
   )
-length_plot
+# length_plot
 ```
 
 ```{r}
@@ -129,7 +139,7 @@ width_plot <- ggplot(palmetto,
     axis.text = element_text(size = 10),
     legend.position = "none"
   )
-width_plot
+# width_plot
 
 ```
 
@@ -155,7 +165,7 @@ plot4 <- width_plot +
 
 ```{r}
 combinedplot <- plot1 + plot2 + plot3 + plot4
-combinedplot
+# combinedplot
 ```
 
 Ok, DO WORK:
@@ -177,8 +187,6 @@ summary(blr2)
 
 COEF tell us LOG ODDS: 
 
-Thoughts: 
-F1 - all p values are teeny, v important
 Coefficients:
              Estimate Std. Error z value Pr(>|z|)    
 (Intercept)  3.226685   0.142071   22.71   <2e-16 ***
@@ -204,6 +212,8 @@ palmetto %>%
   summarize(n = n()) %>%
   ungroup() %>%
   mutate(prop = n / sum(n))
+
+# Almost a 50/50 split - looks good. 
 
 set.seed(123)
 
@@ -267,11 +277,11 @@ accuracy	binary	0.896903
 ```{r}
 #ROC 1
 roc_df1 <- roc_curve(p_test_predict1, truth = species, .pred_1)
-autoplot(roc_df)
+autoplot(roc_df1)
 
 #ROC 2
 roc_df2 <- roc_curve(p_test_predict2, truth = species, .pred_1)
-autoplot(roc_df)
+autoplot(roc_df2)
 ```
 
 
@@ -300,8 +310,6 @@ blr_wf2 <- workflow() %>%
   add_formula(f2)
  
 ```
-QUESTION:
-#what is the difference between regular accuracy and ROC?
 
 ```{r}
 #apply to folded datasetls: 
@@ -317,54 +325,79 @@ blr_fit_folds2
 # Metrics:
 collect_metrics(blr_fit_folds1)
 
-#accuracy: mean 0.9174543	n 10	std: 0.0025763289
-#roc: mean 0.9732677	n 10	std: 0.0008184978 
-
 collect_metrics(blr_fit_folds2)
-#accuracy: mean 0.8997234	n 10	std 0.003419435
-#roc: mean 0.9638196	n 10	std 0.001191673
 
 #ROC close to 100 means, close to a perfect classifier. 
 ```
+# QUESTION:
+what is the difference between regular accuracy and ROC?
+
 Model 1:
 accuracy	binary	0.9174543	10	0.0025763289
 roc_auc	binary	0.9732677	10	0.0008184978	
-
 Model 2:
-
 accuracy	binary	0.8997234	10	0.003419435	
 roc_auc	binary	0.9638196	10	0.001191673
 
 Based on AIC and ROC - we are going with Model 1 (lower AIC, highter ROC)
 
+# Entire Data Set
+
 Now, we train it: Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and kableExtra functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way). 
 
 ```{r}
 #Run Model 1 on entire data set: 
-set.seed(10101)
-p_folds <- vfold_cv(palmetto, v = 10)
-p_folds
 
-blr_wf1 <- workflow() %>%  
-  add_model(blr_mdl) %>%
-  add_formula(f1)
+blr_fit_full <- blr_mdl %>%
+  fit(formula = f1, data = palmetto)
 
-blr_fit_folds <- blr_wf1 %>%
-  fit_resamples(p_folds)
+# blr_fit_full
+
+```
+# Create a finalized table - add caption
+```{r}
+
+# Broom::Tidy 
+tidy_output <- tidy(blr_fit_full)
+
+# Create kable table
+final_table <- kable(tidy_output, align = "c") %>%
+  kable_styling() 
+
+# final_table
+# 
+# save_kable(final_table, file = "plots/kable_table.html")
+
 ```
 
+How successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A).
 
-
-
-
-
-
-
+Use broom::augment() to find the probabilities (instead of log-odds) for each plant in the original dataset
 ```{r}
-# Create a finalized table
-final_table <- kable(model_results, align = "c") %>%
-  kable_styling() %>%
-  add_header_above(c(" ", "Estimate", "Std. Error", "z value", "Pr(>|z|)"))
+# Use broom:argument() to find prob for each plant in og data
+p_test_predict_full <- augment(blr_fit_full, new_data = palmetto, type.predict = 'response')
+head(p_test_predict_full)
+```
+then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables. 
+```{r}
+p_test_predict_full_cutoff <- p_test_predict_full %>%
+  mutate(predicted_species = ifelse(.pred_1 > 0.5, "Species 1", "Species 2")) %>% 
+  select(predicted_species, everything())
+
+head(p_test_predict_full_cutoff)
+
+```
+# Question: WHY IS IT STILL .pred_class from the titanic lab. First mention of pred_class is in line 265, but I dont see where we name that variable? Did i create an unnecessary line - looks like .pred_class is doing this already. 
+
+finalized table showing, for each species, how many plants in the original dataset would be correctly classified and how many were incorrectly classified by the model, as well as an additional column with “% correctly classified”. Add a table caption above the table, and a 1-2 sentence conclusion paragraph after.
+```{r}
+library(dplyr)
+
+# Calculate number of correctly and incorrectly classified plants
+classification_summary <- p_test_predict_full_cutoff %>%
+  group_by(species, predicted_species)
+
+# % correct ?????
 
 ```
 
