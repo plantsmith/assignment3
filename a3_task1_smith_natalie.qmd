@@ -30,7 +30,7 @@ The models used are as follows:
 -   Model 1: The log odds of plant type using plant height, canopy length, canopy width, and green leaves as predictor variables.
 -   Model 2: The log odds of plant type using plant height, canopy width, and green leaves (i.e., excluding canopy length for this model).
 
-Note that *S. repens* = speices 1 and *S. etonia* = species 2. 
+Note that *S. repens* = speices 1 and *S. etonia* = species 2.
 
 Data Citation: Abrahamson, W.G. 2019. Survival, growth and biomass estimates of two dominant palmetto species of south-central Florida from 1981 - 2017, ongoing at 5-year intervals ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/f2f96ec76fbbd4b9db431c79a770c4d5
 
@@ -173,13 +173,16 @@ plot4 <- width_plot +
   theme(axis.text.y = element_text(size = 8)) +
   theme(axis.title.x = element_blank())
 ```
-While the species are very similar based on the predictor variables overall, there is slight species differentiation observed when examining "green leaves" and "canopy length." 
+
+While the species are very similar based on the predictor variables overall, there is slight species differentiation observed when examining "green leaves" and "canopy length."
+
 ```{r}
 #| label: fig-combined_plot
 #| fig-cap: 'Insert'
 combinedplot <- plot1 + plot2 + plot3 + plot4
 combinedplot
 ```
+
 # Models:
 
 ```{r}
@@ -198,13 +201,6 @@ summary(blr2)
 ```
 
 COEF tell us LOG ODDS:
-
-Coefficients: Estimate Std. Error z value Pr(\>\|z\|)\
-(Intercept) 3.226685 0.142071 22.71 \<2e-16 ***height -0.029217 0.002306 -12.67 \<2e-16*** length 0.045823 0.001866 24.56 \<2e-16 ***width 0.039443 0.002100 18.78 \<2e-16*** green_lvs -1.908475 0.038863 -49.11 \<2e-16 \*\*\*
-
-F2 - Coefficients: Estimate Std. Error z value Pr(\>\|z\|)\
-(Intercept) 3.767722 0.135314 27.844 \<2e-16 ***height -0.002950 0.001881 -1.568 0.117\
-width 0.069019 0.001785 38.661 \<2e-16*** green_lvs -1.884815 0.036127 -52.172 \<2e-16 \*\*\*
 
 green leaves has largest effect on log odds. wtf is going on w height - tbd
 

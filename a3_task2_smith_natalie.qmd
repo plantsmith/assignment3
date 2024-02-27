@@ -36,6 +36,9 @@ library(janitor)
 ```{r}
 # Access the data from SM package in NLRAA
 data <- sm
+#clean the data
+crop_data <- data %>% 
+  janitor::clean_names()
 ```
 
 # Variables:
@@ -70,22 +73,6 @@ te is the time when Y = Yasym
 tc is the critical time for a switch-off to occur (e.g., critical photoperiod)
 n is a parameter that determines the sharpness of the response
 
-
-```{r}
-#clean the data
-crop_data <- data %>% 
-  janitor::clean_names() %>%
-  mutate(yield = yield + 1) %>% 
-  filter(!is.na(crop)) %>% 
-  group_by(crop) %>% 
-  drop_na()
-
-#BUT ALSO YOU CANNOT LOG 0 so add + 1 to yield but maybe im way off
-crop_data <- crop_data %>%
-  mutate(yield = yield + 1)
-
-```
-
 Notes from paper:
 * Three crops
 * two levels of agronomic input
@@ -94,38 +81,58 @@ Notes from paper:
 
 Write a function in R to model the Beta Function.
 
-So i actually think my issue is - I dont know what the variables mean so Idk know to input them?
 ```{r}
 #create beta function:
-beta_function <- function(t, ymax, te, tt, tm) {
-  y <- ymax * ((1 + (te - t / te - tm)) * ((t / te)^(te / tt - tm)))
+beta<- function(ymax, te, tm, t){
+  y <- ymax * (1 + (te - t) / (te - tm)) * (t / te)^(te / (te - tm))
   return(y)
 }
 
-# Add controls
-controls=nls.control(maxiter=100)
+# Add inital guesses:
 
-#guess model
-guess_model <- lm(log(yield) ~ log(doy), data = crop_data)
+beta_test <- crop_data %>% 
+  mutate(sim=beta(ymax = 52, te = 280, tm = 220, t= doy))
 
-# Run nls
-nls_one <- nls(yield ~ beta_function(t, ymax, te, tt, tmm),
-               data = crop_data
-               
+ggplot(beta_test, aes(x = doy, y = yield, color = "data"))+
+  geom_point()+
+  geom_line(aes(x = doy, y= sim, color = "model"))+
+  scale_color_manual(values= c("data" = "black", "model" = "orange"))+
+  theme_bw()
+```
+```{r}
 
-# nls_one<-nls(weight~length_to_weight(a,b,SV_length),
-#              data=lizard_comb,
-#              start=list(a=exp(coefficients(guess_model))[1],b=coefficients(guess_model)[2]),
-#              control=controls)
+#guesses:
+ymax_guess <- max(crop_data$yield)
+te_guess <- 280
+tm_guess <- 220
 
-# # predictions should be something like this:
-# predictions <- data.frame(doy = seq(min(crop_data$doy), max(crop_data$doy), length.out = 100))
-#
-# #collect the predictions into one df 
-# dfplot=data.frame(predict=predictions,length=length_step)
+#filter the data:
+df_filter <- crop_data %>% 
+  filter(!((crop == "F" | crop == "S") & input == 2))
 
-# Make a graph
+nls_1 <- nls(
+  formula = yield ~ beta(ymax, te, tm, doy),
+  data = df_filter,
+  start = list(ymax = ymax_guess, te = te_guess, tm = tm_guess),
+  trace = TRUE)
 
 ```
+
+
+run nls with filter crop f and crop s input 2
+new fram- old frame %>% 
+run first offical nls 
+
+DOY = t (which is a continuous input)
+
+nls (formula yeild ~ beta(ymax, te, tm, doy) )
+data = filterd data
+start = list(list variables from guess space )
+trace = TRUE
+
+paramater values 
+
+knnit them into a table kable(coef(summary(nls)))
+
 
 
