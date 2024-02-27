@@ -3,22 +3,38 @@ title: "Palmetto binary logistic regression (individual)"
 author: "Natalie Smith"
 format: 
   html:
-    embed-resources: true
     code-fold: true
     toc: true
+    number-sections: true
+    embed-resources: true
+theme: Yeti
+editor: visual
 execute:
-  warning: false
+  echo: true
   message: false
+  warning: false
 ---
 
-# Overview: 
-describe the data
-question(s) to be addressed in your analysis
-citation of the dataset
+# Overview:
 
-NOTE: 
-1 = S. repens
-2 = S. etonia
+The Florida palmetto data examines the survival, growth, and biomass estimates of two dominant palmetto species, *Serenoa repens* and *Sabal etonia*, in south-central Florida from 1981 to 2017, recorded at 5-year intervals. The dataset encompasses various variables, but for this analysis, we aim to focus on plant height, canopy length, canopy width, and green leaves. We'll create two different models with these variables to predict the plant species and determine which model is a better fit. Additionally, based on the superior model, we'll evaluate its success in correctly classifying a plant.
+
+::: image-grid
+![Sabal etonia](misc/sabal_etonia_2.jpeg){alt="Sabal etonia"} <img src="misc/serenoa_repens.jpeg" alt="Serenoa repens" style="width: 45%;"/>
+
+Left: *Sabal etonia*, Right: *Serenoa repens*
+:::
+
+The models used are as follows:
+
+-   Model 1: The log odds of plant type using plant height, canopy length, canopy width, and green leaves as predictor variables.
+-   Model 2: The log odds of plant type using plant height, canopy width, and green leaves (i.e., excluding canopy length for this model).
+
+Note that *S. repens* = speices 1 and *S. etonia* = species 2. 
+
+Data Citation: Abrahamson, W.G. 2019. Survival, growth and biomass estimates of two dominant palmetto species of south-central Florida from 1981 - 2017, ongoing at 5-year intervals ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/f2f96ec76fbbd4b9db431c79a770c4d5
+
+# Exploratory Plots:
 
 ```{r}
 library(tidyverse) 
@@ -30,7 +46,6 @@ library(broom)
 library(kableExtra)
 ```
 
-
 ```{r}
 #pull in the data
 p_df <- read.csv(here("data/palmetto.csv"))
@@ -41,10 +56,6 @@ palmetto <- p_df %>%
   mutate(species=as_factor(species)) %>% 
   drop_na()
 ```
-
-# Exploratory Plots:
-Add a sentence or two with a takeaway from the plots:
-based on these plots, which predictor variables are more likely to help classify species correctly?
 
 ```{r}
 #Species Boxplot ~ Green Leaves
@@ -162,13 +173,14 @@ plot4 <- width_plot +
   theme(axis.text.y = element_text(size = 8)) +
   theme(axis.title.x = element_blank())
 ```
-
+While the species are very similar based on the predictor variables overall, there is slight species differentiation observed when examining "green leaves" and "canopy length." 
 ```{r}
+#| label: fig-combined_plot
+#| fig-cap: 'Insert'
 combinedplot <- plot1 + plot2 + plot3 + plot4
-# combinedplot
+combinedplot
 ```
-
-Ok, DO WORK:
+# Models:
 
 ```{r}
 # Define formulas:
@@ -185,23 +197,14 @@ summary(blr2)
 
 ```
 
-COEF tell us LOG ODDS: 
+COEF tell us LOG ODDS:
 
-Coefficients:
-             Estimate Std. Error z value Pr(>|z|)    
-(Intercept)  3.226685   0.142071   22.71   <2e-16 ***
-height      -0.029217   0.002306  -12.67   <2e-16 ***
-length       0.045823   0.001866   24.56   <2e-16 ***
-width        0.039443   0.002100   18.78   <2e-16 ***
-green_lvs   -1.908475   0.038863  -49.11   <2e-16 ***
+Coefficients: Estimate Std. Error z value Pr(\>\|z\|)\
+(Intercept) 3.226685 0.142071 22.71 \<2e-16 ***height -0.029217 0.002306 -12.67 \<2e-16*** length 0.045823 0.001866 24.56 \<2e-16 ***width 0.039443 0.002100 18.78 \<2e-16*** green_lvs -1.908475 0.038863 -49.11 \<2e-16 \*\*\*
 
-F2 - 
-Coefficients:
-             Estimate Std. Error z value Pr(>|z|)    
-(Intercept)  3.767722   0.135314  27.844   <2e-16 ***
-height      -0.002950   0.001881  -1.568    0.117    
-width        0.069019   0.001785  38.661   <2e-16 ***
-green_lvs   -1.884815   0.036127 -52.172   <2e-16 ***
+F2 - Coefficients: Estimate Std. Error z value Pr(\>\|z\|)\
+(Intercept) 3.767722 0.135314 27.844 \<2e-16 ***height -0.002950 0.001881 -1.568 0.117\
+width 0.069019 0.001785 38.661 \<2e-16*** green_lvs -1.884815 0.036127 -52.172 \<2e-16 \*\*\*
 
 green leaves has largest effect on log odds. wtf is going on w height - tbd
 
@@ -227,6 +230,7 @@ p_test_df <- testing(p_split)
 ```
 
 # if i set up a workflow below, do I have to do this step?
+
 ```{r}
 #binary logistic regression model with our data
 
@@ -245,6 +249,7 @@ blr_fit2<- blr_mdl %>%
 blr_fit1
 blr_fit2
 ```
+
 First model is better - lower AIC
 
 ```{r}
@@ -269,10 +274,8 @@ accuracy(p_test_predict2, truth = species, estimate = .pred_class)
 
 ```
 
-(1)
-accuracy	binary	0.9123879	
-(2)
-accuracy	binary	0.896903	
+(1) accuracy binary 0.9123879\
+(2) accuracy binary 0.896903
 
 ```{r}
 #ROC 1
@@ -284,13 +287,11 @@ roc_df2 <- roc_curve(p_test_predict2, truth = species, .pred_1)
 autoplot(roc_df2)
 ```
 
-
 ```{r}
 ### Calculate area under curve - 50% is random guessing, 100% is perfect classifier
 yardstick::roc_auc(p_test_predict1, truth = species, .pred_1)
 yardstick::roc_auc(p_test_predict2, truth = species, .pred_1)
 ```
-
 
 ```{r}
 #FOLDs: 
@@ -298,7 +299,9 @@ set.seed(10101)
 p_train_folds <- vfold_cv(p_train_df, v = 10)
 p_train_folds
 ```
+
 Question: is this the same thing we did above?
+
 ```{r}
 #workflow
 blr_wf1 <- workflow() %>%  
@@ -329,21 +332,19 @@ collect_metrics(blr_fit_folds2)
 
 #ROC close to 100 means, close to a perfect classifier. 
 ```
+
 # QUESTION:
+
 what is the difference between regular accuracy and ROC?
 
-Model 1:
-accuracy	binary	0.9174543	10	0.0025763289
-roc_auc	binary	0.9732677	10	0.0008184978	
-Model 2:
-accuracy	binary	0.8997234	10	0.003419435	
-roc_auc	binary	0.9638196	10	0.001191673
+Model 1: accuracy binary 0.9174543 10 0.0025763289 roc_auc binary 0.9732677 10 0.0008184978\
+Model 2: accuracy binary 0.8997234 10 0.003419435 roc_auc binary 0.9638196 10 0.001191673
 
 Based on AIC and ROC - we are going with Model 1 (lower AIC, highter ROC)
 
 # Entire Data Set
 
-Now, we train it: Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and kableExtra functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way). 
+Now, we train it: Train your selected model using the entire dataset, and create a finalized table (e.g., knitr::kable() and kableExtra functions) containing the binary logistic regression model results (at least coefficients, standard errors for the coefficients, and information for significance - consider using broom::tidy() to get you most of the way).
 
 ```{r}
 #Run Model 1 on entire data set: 
@@ -354,7 +355,9 @@ blr_fit_full <- blr_mdl %>%
 # blr_fit_full
 
 ```
+
 # Create a finalized table - add caption
+
 ```{r}
 
 # Broom::Tidy 
@@ -370,15 +373,18 @@ final_table <- kable(tidy_output, align = "c") %>%
 
 ```
 
-How successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is >=50% that it is species A, then it would be classified as species A).
+How successfully this model would “classify” a plant as the correct species, using a 50% cutoff (e.g. if the probability is \>=50% that it is species A, then it would be classified as species A).
 
 Use broom::augment() to find the probabilities (instead of log-odds) for each plant in the original dataset
+
 ```{r}
 # Use broom:argument() to find prob for each plant in og data
 p_test_predict_full <- augment(blr_fit_full, new_data = palmetto, type.predict = 'response')
 head(p_test_predict_full)
 ```
-then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables. 
+
+then add a column for which species your model would classify that plant as (using a 50% cutoff) based on the included predictor variables.
+
 ```{r}
 p_test_predict_full_cutoff <- p_test_predict_full %>%
   mutate(predicted_species = ifelse(.pred_1 > 0.5, "Species 1", "Species 2")) %>% 
@@ -387,9 +393,11 @@ p_test_predict_full_cutoff <- p_test_predict_full %>%
 head(p_test_predict_full_cutoff)
 
 ```
-# Question: WHY IS IT STILL .pred_class from the titanic lab. First mention of pred_class is in line 265, but I dont see where we name that variable? Did i create an unnecessary line - looks like .pred_class is doing this already. 
+
+# Question: WHY IS IT STILL .pred_class from the titanic lab. First mention of pred_class is in line 265, but I dont see where we name that variable? Did i create an unnecessary line - looks like .pred_class is doing this already.
 
 finalized table showing, for each species, how many plants in the original dataset would be correctly classified and how many were incorrectly classified by the model, as well as an additional column with “% correctly classified”. Add a table caption above the table, and a 1-2 sentence conclusion paragraph after.
+
 ```{r}
 library(dplyr)
 
@@ -400,4 +408,3 @@ classification_summary <- p_test_predict_full_cutoff %>%
 # % correct ?????
 
 ```
-

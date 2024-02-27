@@ -3,13 +3,16 @@ title: "Non-linear Least Squares"
 author: "Natalie Smith"
 format: 
   html:
-    embed-resources: true
     code-fold: true
     toc: true
-execute: 
+    number-sections: true
+    embed-resources: true
+theme: Yeti
+editor: visual
+execute:
   echo: true
-  warning: false
   message: false
+  warning: false
 ---
 # Overview: 
 Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. You will help farmers make predictions on their yields by running non-linear least squares on experimental growth data for three grains in Greece. 
