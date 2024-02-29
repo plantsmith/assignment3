@@ -14,125 +14,268 @@ execute:
   message: false
   warning: false
 ---
-# Overview: 
-Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. You will help farmers make predictions on their yields by running non-linear least squares on experimental growth data for three grains in Greece. 
 
-Additionally, you will assess the response of the grains to fertlizer. 
+# Overview:
 
-You will recreate the model examples of Archontoulis, S.V. and Miguez, F.E. (2015). Read the paper to acquire more insight into nonlinear least squares and its application in agriculture. 
+Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. This analysis aims to help farmers predict yields by running non-linear least squares on experimental growth data for three grains in Greece. Additionally, it assesses the response of the grains to fertilizer inputs.
+
+Data:
+
+The dataset contains experimental growth data with the following variables: [-]{.underline} DOY: Day of Year [-]{.underline} Block: Location [-]{.underline} Input: irrigation & Fertilizer application (High or Low) [-]{.underline} Crop: Type of crop (Fiber sorghum, Sweet sorghum, or Maize) [-]{.underline} Yield: Biomass
 
 ```{r}
 library(tidyverse)
-library(lterdatasampler)
 library(knitr)
 library(broom)
-library(investr)
 library(kableExtra)
 library(nlraa)
 library(janitor)
+library(patchwork)
 ```
-
 
 ```{r}
 # Access the data from SM package in NLRAA
 data <- sm
 #clean the data
-crop_data <- data %>% 
+crop_df <- data %>% 
   janitor::clean_names()
 ```
 
-# Variables:
+<!-- -->
 
-Write a brief description of the data including variable names and structure. 
+-   Crop:
 
-Variables: 
-DOY: Day of Year
-Block: location
-Input: 
-  High = weekly irrigation & applicaton of 200 kg N ha^-1 (fertilizer)
-  Low = biweekly irrigation.& application of 50 kg N ha^-1 (fertilizer)
-Crop: 
-  (F) fiber sorghum
-  (S) sweet sorghum 
-  (M) maize 
-Yield: Biomass
+    -   \(F\) fiber sorghum
 
-Create finalized summary table of the data in your report. 
+    -   (S )sweet sorghum
 
-Use the Beta function:
+    -   \(M\) maize
 
-Briefly describe what each parameter generally means: 
-Y is the response variable (e.g., biomass)
-t is the explanatory variable (e.g., time)
-Ymax is the asymptotic or the maximum Y value, respectively
-tm is the inflection point at which the growth rate is maximized
-k controls the steepness of the curve
-v deals with the asymmetric growth (if v = 1, then Richards' equation becomes logistic)
-a and b are parameters that determine the shape of the curve
-te is the time when Y = Yasym
-tc is the critical time for a switch-off to occur (e.g., critical photoperiod)
-n is a parameter that determines the sharpness of the response
+-   Yield: Biomass
 
-Notes from paper:
-* Three crops
-* two levels of agronomic input
-* four blocks
-* = 24 possible combinations 
+Briefly describe what each parameter generally means:
 
-Write a function in R to model the Beta Function.
+-   Y is the response variable (e.g., biomass)
+
+    -   Ymax is the asymptotic or the maximum Y value
+
+-   t is the explanatory variable (e.g., day of year)
+
+-   tm is the inflection point at which the growth rate is maximized
+
+-   te is the time when Y = Yasym
+
+Notes from paper: \* Three crops \* two levels of agronomic input \* four blocks \* = 24 possible combinations
+
+### Create a Model:
+
+Write a function in R to model the Beta Function. 
+
+Create a plot similar to Fig. 4 (biomass over time) and use the definitions of the different parameters to find some potential starting parameter values for your nls analysis.
+
+In your final report include the code, but NOT the plot you used to feed guesses.
 
 ```{r}
-#create beta function:
+# Plot
+guess_plot <- ggplot(crop_df, aes(x = doy, y = yield, color = "data")) +
+  geom_point() +
+  geom_smooth()+
+  facet_grid(. ~ input, scales = "free_y", space = "free_x")+
+  scale_color_manual(values = c("data" = "black", "model" = "#FF5733")) +
+  labs(y = "Biomass (mg/ha)", x = "Day of Year", color = " ")+
+  theme_minimal()
+
+guess_plot
+```
+
+```{r}
+
+# Create beta function:
 beta<- function(ymax, te, tm, t){
   y <- ymax * (1 + (te - t) / (te - tm)) * (t / te)^(te / (te - tm))
   return(y)
 }
 
+# Guesses:
+ymax_guess <- 20
+te_guess <- 240
+tm_guess <- 200
+
 # Add inital guesses:
+beta_test <- crop_df %>% 
+  mutate(sim=beta(ymax = 20, te = 240, tm = 220, t= doy))
 
-beta_test <- crop_data %>% 
-  mutate(sim=beta(ymax = 52, te = 280, tm = 220, t= doy))
 
-ggplot(beta_test, aes(x = doy, y = yield, color = "data"))+
-  geom_point()+
-  geom_line(aes(x = doy, y= sim, color = "model"))+
-  scale_color_manual(values= c("data" = "black", "model" = "orange"))+
-  theme_bw()
 ```
+
+Model Fitting and Evaluation:
+
+(one crop)
+
 ```{r}
 
-#guesses:
-ymax_guess <- max(crop_data$yield)
-te_guess <- 280
-tm_guess <- 220
-
-#filter the data:
-df_filter <- crop_data %>% 
-  filter(!((crop == "F" | crop == "S") & input == 2))
-
-nls_1 <- nls(
-  formula = yield ~ beta(ymax, te, tm, doy),
-  data = df_filter,
-  start = list(ymax = ymax_guess, te = te_guess, tm = tm_guess),
-  trace = TRUE)
+# Filter to keep observations from the sorghum fields with high inputs
+crop_filter <- crop_df %>% 
+  filter((crop == "S") & input == 2)
 
 ```
 
+Run NLS
 
-run nls with filter crop f and crop s input 2
-new fram- old frame %>% 
-run first offical nls 
+```{r}
+nls_1 <- nls(
+  formula = yield ~ beta(ymax, te, tm, doy),
+  data = crop_filter,
+  start = list(ymax = ymax_guess, te = te_guess, tm = tm_guess),
+  trace = TRUE)
+```
 
-DOY = t (which is a continuous input)
+Cute table:
 
-nls (formula yeild ~ beta(ymax, te, tm, doy) )
-data = filterd data
-start = list(list variables from guess space )
-trace = TRUE
+```{r}
+# Create a summary table 
+summary_table <- coefficients(summary(nls_1))
 
-paramater values 
+# Basic table
+kable(summary_table)
 
-knnit them into a table kable(coef(summary(nls)))
+# Fancy table
+kable(summary_table, format = "html", align = "lccc", digits = 3,
+      col.names = c("Parameter", "Estimate", "Standard Error", "T-value", "P-value"))
+
+```
+
+How well the model fits the data:
+
+```{r}
+# Model visualization
+crop_predict <- crop_filter %>% 
+  mutate(predict=predict(nls_1,newdata=.))
+
+ggplot(data=crop_predict)+
+  geom_point(aes(x=doy, y=yield))+
+  geom_path(aes(x=doy, y=predict),color="#FF5733")+
+  labs(y = "Biomass (mg/ha)", x = "Day of Year", color = " ")+
+  theme_minimal()
+  
+```
+
+tbh, looks good?
+
+Replicate the analysis using Purrr:
+
+Did this do anything?
+
+```{r}
+#Define a new function to pass along the nls calls
+
+all_nls <- function(test_df) {
+  nls(yield ~ beta(ymax, te, tm, doy),
+      data = test_df,
+      start = list(ymax = ymax_guess, te = te_guess, tm = tm_guess))
+}
+
+# Replicate w Purrr
+
+all_crops <- crop_df %>%
+  group_by(block,input,crop) %>% 
+  nest() %>% 
+  mutate(nls_model = map(data, ~ all_nls(.x))) %>% 
+  mutate(predictions = map2(nls_model, data, ~ predict(.x, newdata = .y))) %>% 
+  mutate(rmse = map2_dbl(predictions, data, ~ Metrics::rmse(.x, .y$yield))) %>% 
+  mutate(smooth = map(nls_model, ~predict(.x, newdata = list(doy = seq(147,306)))))
+
+all_crops
 
 
+```
 
+Create a table
+
+```{r}
+
+rmse_table <- all_crops %>% 
+  group_by(crop) %>% 
+  summarize(rmse = min(rmse))
+
+low_rmse <- all_crops %>% 
+  filter(rmse %in% rmse_table$rmse)
+
+low_rmse_M <- broom::tidy(low_rmse$nls_model[[1]]) %>% mutate(crop="M")
+low_rmse_S <- broom::tidy(low_rmse$nls_model[[2]]) %>% mutate(crop="S")
+low_rmse_F <- broom::tidy(low_rmse$nls_model[[3]]) %>% mutate(crop="F")
+
+low_rmse_combined <- bind_rows(low_rmse_M,low_rmse_S,low_rmse_F)
+
+kable(low_rmse_combined)
+  
+```
+
+```{r}
+# Unnest predictions from data and clean maize data
+un_df <- all_crops %>% 
+  filter(block==1) %>% 
+  tidyr::unnest(smooth) %>% 
+  mutate(doy=seq(147,306)) %>% 
+  filter(!(doy>263 & crop=="M"))
+
+# Create a dataframe to add corn data
+hi_filter <- crop_df %>% 
+  filter(block == 1 & input == 2)
+
+low_filter <- crop_df %>% 
+  filter(block == 1 & input == 1)
+
+```
+
+```{r}
+#Make dumb graphs
+
+hi_plot <- un_df %>%
+  filter(block == 1 & input == 2) %>%
+  ggplot() +
+  geom_point(data = hi_filter, aes(x = doy, y = yield, shape = crop)) +
+  geom_line(aes(x = doy, y = smooth, linetype = crop)) +
+  labs(y = " ", x = " ", color = " ")+
+  theme_minimal()
+
+hi_plot
+
+
+low_plot<-un_df |> 
+  filter(block==1 & input==1) |> 
+  ggplot()+
+  geom_point(data=low_filter,aes(x=doy,y=yield,shape=crop))+
+  geom_line(aes(x=doy,y=smooth,linetype=crop))+
+  labs(y = " ", x = " ", color = " ")+
+  theme_minimal()
+
+low_plot
+
+
+```
+
+Combine Plots:
+
+```{r}
+library(patchwork)
+
+plot1 <- hi_plot + 
+  theme(axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 8),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) 
+
+
+plot2 <- low_plot +
+   theme(axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 8),  
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) 
+
+combine_plots <- plot1 +plot2 + plot_layout(guides = "collect")
+
+combine_plots
+
+
+```
