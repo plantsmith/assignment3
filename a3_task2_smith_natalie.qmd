@@ -19,9 +19,19 @@ execute:
 
 Farmers need to understand the biology of plants and their responses to fertilizers to maximize yield. This analysis aims to help farmers predict yields by running non-linear least squares on experimental growth data for three grains in Greece. Additionally, it assesses the response of the grains to fertilizer inputs.
 
-Data:
+Data Citation:
 
-The dataset contains experimental growth data with the following variables: [-]{.underline} DOY: Day of Year [-]{.underline} Block: Location [-]{.underline} Input: irrigation & Fertilizer application (High or Low) [-]{.underline} Crop: Type of crop (Fiber sorghum, Sweet sorghum, or Maize) [-]{.underline} Yield: Biomass
+The dataset contains growth data with the following variables:
+
+-   DOY: Day of Year
+
+-   Block: Location
+
+-   Input: irrigation & Fertilizer application (High or Low)
+
+-   Crop: Type of crop (Fiber sorghum (F), Sweet sorghum (S), or Maize(M))
+
+-   Yield: Biomass (Mg/ha)
 
 ```{r}
 library(tidyverse)
@@ -40,18 +50,6 @@ data <- sm
 crop_df <- data %>% 
   janitor::clean_names()
 ```
-
-<!-- -->
-
--   Crop:
-
-    -   \(F\) fiber sorghum
-
-    -   (S )sweet sorghum
-
-    -   \(M\) maize
-
--   Yield: Biomass
 
 Briefly describe what each parameter generally means:
 
@@ -74,6 +72,8 @@ Write a function in R to model the Beta Function. 
 Create a plot similar to Fig. 4 (biomass over time) and use the definitions of the different parameters to find some potential starting parameter values for your nls analysis.
 
 In your final report include the code, but NOT the plot you used to feed guesses.
+
+# Exp. Plot:
 
 ```{r}
 # Plot
@@ -235,8 +235,7 @@ hi_plot <- un_df %>%
   filter(block == 1 & input == 2) %>%
   ggplot() +
   geom_point(data = hi_filter, aes(x = doy, y = yield, shape = crop)) +
-  geom_line(aes(x = doy, y = smooth, linetype = crop)) +
-  labs(y = " ", x = " ", color = " ")+
+  geom_line(aes(x = doy, y = smooth, linetype = crop)) +labs(y = " ", x = " ", color = " ")+
   theme_minimal()
 
 hi_plot
@@ -273,7 +272,7 @@ plot2 <- low_plot +
         axis.title.x = element_blank(),
         axis.title.y = element_blank()) 
 
-combine_plots <- plot1 +plot2 + plot_layout(guides = "collect")
+combine_plots <- plot1 +plot2 + plot_layout(guides = "collect",
 
 combine_plots
 
