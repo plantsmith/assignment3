@@ -302,11 +302,6 @@ predict_correct <- c(5548,5701)
 predict_incorrect <- c(564,454)
 percent_correct <- c(91,93)
 
-species <- c('S. Repens', 'S. Etonia')
-predict_correct <- c(5548, 5701)
-predict_incorrect <- c(564, 454)
-percent_correct <- c(91, 93)
-
 # Create the data frame
 species_correct <- data.frame(species, predict_correct, predict_incorrect, percent_correct)
 

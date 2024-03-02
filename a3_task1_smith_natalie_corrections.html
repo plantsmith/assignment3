@@ -3545,7 +3545,7 @@ border: 0;
 </section>
 <section id="train-on-full-dataset" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Train on Full Dataset:</h1>
-<p>Now that we have decided the f1 is the better predicting model, we want to train the model on the entire dataset.</p>
+<p>Now that we have decided the F1 is the better predicting model, we want to train the model on the entire dataset.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -3705,24 +3705,19 @@ green_lvs
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># tidy(results_table)</span></span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;S.Repens&#39;</span>, <span class="st">&#39;S. Etonia&#39;</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;S. Repens&#39;</span>, <span class="st">&#39;S. Etonia&#39;</span>)</span>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>predict_correct <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5548</span>,<span class="dv">5701</span>)</span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>predict_incorrect <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">564</span>,<span class="dv">454</span>)</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>percent_correct <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">91</span>,<span class="dv">93</span>)</span>
 <span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;S.Repens&#39;</span>, <span class="st">&#39;S. Etonia&#39;</span>)</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>predict_correct <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5548</span>, <span class="dv">5701</span>)</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>predict_incorrect <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">564</span>, <span class="dv">454</span>)</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>percent_correct <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">91</span>, <span class="dv">93</span>)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the data frame</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>species_correct <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(species, predict_correct, predict_incorrect, percent_correct)</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#kable it</span></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>species_correct_kable <span class="ot">&lt;-</span> <span class="fu">kable</span>(species_correct, <span class="at">align =</span> <span class="st">&quot;c&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>() </span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>species_correct_kable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the data frame</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>species_correct <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(species, predict_correct, predict_incorrect, percent_correct)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#kable it</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>species_correct_kable <span class="ot">&lt;-</span> <span class="fu">kable</span>(species_correct, <span class="at">align =</span> <span class="st">&quot;c&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>() </span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>species_correct_kable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <table class="table table-sm table-striped small" data-quarto-postprocess="true">
@@ -3736,7 +3731,7 @@ green_lvs
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: center;">S.Repens</td>
+<td style="text-align: center;">S. Repens</td>
 <td style="text-align: center;">5548</td>
 <td style="text-align: center;">564</td>
 <td style="text-align: center;">91</td>
@@ -3752,10 +3747,6 @@ green_lvs
 
 
 </div>
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save_kable</span>(species_correct_kable, <span class="at">file =</span> <span class="st">&quot;plots/species_correct_kable.html&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 </section>
 

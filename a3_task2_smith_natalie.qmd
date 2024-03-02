@@ -35,12 +35,12 @@ library(janitor)
 library(patchwork)
 ```
 
-The dataset contains growth data with the following variables:
+The dataset we will be using contains crop data with the following variables:
 
 ```{r}
 
 
-# Create a data frame with the information
+# Create a data frame for variables
 variables <- data.frame(
   Variable = c("DOY", "Block", "Input", "Crop", "Yield"),
   Description = c("Day of Year", "Location", "Irrigation & Fertilizer application (High or Low)",
@@ -92,8 +92,6 @@ beta_table <- kable(beta_parameters) %>%
 
 beta_table
 
-# # Save the table as an HTML file
-# save_kable(beta_table, "plots/beta_function_parameters.html")
 
 ```
 
@@ -235,7 +233,7 @@ low_rmse_M <- broom::tidy(low_rmse$nls_model[[1]]) %>% mutate(crop="Maize (M)")
 low_rmse_S <- broom::tidy(low_rmse$nls_model[[2]]) %>% mutate(crop="Sweet sorghum (S)")
 low_rmse_F <- broom::tidy(low_rmse$nls_model[[3]]) %>% mutate(crop="Fiber sorghum (F)")
 
-# Combine coefficient data for all crops
+# Combine data for all crops
 low_rmse_combined <- bind_rows(low_rmse_M, low_rmse_S, low_rmse_F)
 
 # Crop to the front
@@ -284,7 +282,7 @@ hi_plot <- un_df %>%
   filter(block == 1 & input == 2) %>%
   ggplot() +
   geom_point(data = hi_filter, aes(x = doy, y = yield, shape = crop)) +
-  geom_line(aes(x = doy, y = smooth, linetype = crop)) +labs(y = " ", x = " ", color = " ")+
+  geom_line(aes(x = doy, y = smooth, linetype = crop)) +labs(y = "Biomass (Mg/ha)", x = "Day of Year", color = " ")+
   theme_minimal()
 
 # hi_plot
@@ -295,7 +293,7 @@ low_plot<-un_df |>
   ggplot()+
   geom_point(data=low_filter,aes(x=doy,y=yield,shape=crop))+
   geom_line(aes(x=doy,y=smooth,linetype=crop))+
-  labs(y = " ", x = " ", color = " ")+
+ labs(y = " ", x = "Day of Year", color = " ")+
   theme_minimal()
 
 # low_plot
@@ -309,23 +307,12 @@ low_plot<-un_df |>
 
 #combine plots - clean up axis first 
 
-plot1 <- hi_plot + 
-  theme(axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 8),  
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank()) 
-
-
-plot2 <- low_plot +
-   theme(axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 8),  
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank()) 
+plot1 <- hi_plot 
+plot2 <- low_plot 
 
 combinedplot <- plot1 + plot2 +
-               labs(x = "X Axis Label", y = "Y Axis Label") +
                plot_layout(guides = "collect")
 
-combinedplot 
+combinedplot
 
 ```
