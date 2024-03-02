@@ -21,6 +21,8 @@ Farmers need to understand the biology of plants and their responses to fertiliz
 
 Data Citation:
 
+Archontoulis, S.V. and Miguez, F.E. (2015), Nonlinear Regression Models and Applications in Agricultural Research. Agronomy Journal, 107: 786-798.
+
 The dataset contains growth data with the following variables:
 
 -   DOY: Day of Year
@@ -51,7 +53,9 @@ crop_df <- data %>%
   janitor::clean_names()
 ```
 
-Briefly describe what each parameter generally means:
+# Write Beta Function:
+
+Write a function in R to model the Beta Function. The parameters are as follows:
 
 -   Y is the response variable (e.g., biomass)
 
@@ -63,11 +67,14 @@ Briefly describe what each parameter generally means:
 
 -   te is the time when Y = Yasym
 
-Notes from paper: \* Three crops \* two levels of agronomic input \* four blocks \* = 24 possible combinations
+```{r}
+# Create beta function:
+beta<- function(ymax, te, tm, t){
+  y <- ymax * (1 + (te - t) / (te - tm)) * (t / te)^(te / (te - tm))
+  return(y)
+}
 
-### Create a Model:
-
-Write a function in R to model the Beta Function. 
+```
 
 Create a plot similar to Fig. 4 (biomass over time) and use the definitions of the different parameters to find some potential starting parameter values for your nls analysis.
 
@@ -90,11 +97,6 @@ guess_plot
 
 ```{r}
 
-# Create beta function:
-beta<- function(ymax, te, tm, t){
-  y <- ymax * (1 + (te - t) / (te - tm)) * (t / te)^(te / (te - tm))
-  return(y)
-}
 
 # Guesses:
 ymax_guess <- 20
@@ -146,6 +148,8 @@ kable(summary_table, format = "html", align = "lccc", digits = 3,
 ```
 
 How well the model fits the data:
+
+Notes from paper: \* Three crops \* two levels of agronomic input \* four blocks \* = 24 possible combinations
 
 ```{r}
 # Model visualization

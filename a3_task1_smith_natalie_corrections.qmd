@@ -1,5 +1,5 @@
 ---
-title: "Palmetto binary logistic regression (individual)"
+title: "Palmetto Binary Logistic Regression"
 author: "Natalie Smith"
 format: 
   html:
@@ -7,7 +7,7 @@ format:
     toc: true
     number-sections: true
     embed-resources: true
-theme: Yeti
+theme: Litera
 editor: visual
 execute:
   echo: true
@@ -17,17 +17,19 @@ execute:
 
 # Overview:
 
-The Florida palmetto data examines the survival, growth, and biomass estimates of two dominant palmetto species, *Serenoa repens* and *Sabal etonia*, in south-central Florida from 1981 to 2017, recorded at 5-year intervals. The dataset encompasses various variables, but for this analysis, we aim to focus on plant height, canopy length, canopy width, and green leaves. We'll create two different models with these variables to predict the plant species and determine which model is a better fit. Additionally, based on the superior model, we'll evaluate its success in correctly classifying a plant.
+The Florida palmetto data examines the survival, growth, and biomass estimates of two dominant palmetto species, *Serenoa repens* and *Sabal etonia*, in south Florida from 1981 to 2017, recorded at 5-year intervals. The dataset encompasses various variables, but for this analysis, we will focus on canopy height, length, and width, as well as green leaves.
+
+We aim to create two predictive models with different predictor variable to determine which variables are better at predicting the plant species. Two models with different predictor variables will be created, and the better-performing model will be selected. We will then evaluate the success of the chosen model in correctly classifying a plant species.
 
 ::: image-grid
-![Sabal etonia](misc/sabal_etonia_2.jpeg){alt="Sabal etonia"} <img src="misc/serenoa_repens.jpeg" alt="Serenoa repens" style="width: 45%;"/>
-
-Left: *Sabal etonia*, Right: *Serenoa repens*
+![Left: Sabal etonia, Right: Serenoa repens](misc/palms.jpg)
 :::
 
 Data Citation: Abrahamson, W.G. 2019. Survival, growth and biomass estimates of two dominant palmetto species of south-central Florida from 1981 - 2017, ongoing at 5-year intervals ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/f2f96ec76fbbd4b9db431c79a770c4d5
 
 # Exploratory Plots:
+
+First we want to explore differences in the two species based on canopy height, canopy length, canopy width, and green leaves.
 
 ```{r}
 library(tidyverse) 
@@ -147,7 +149,7 @@ width_plot <- ggplot(palmetto,
 
 ```
 
-# Combine Plots:
+# Combined Plots:
 
 ```{r}
 plot1 <- leaves_plot + 
@@ -167,21 +169,21 @@ plot4 <- width_plot +
   theme(axis.title.x = element_blank())
 ```
 
-While the species are very similar based on the predictor variables overall, there is slight species differentiation observed when examining "green leaves" and "canopy length."
+Based on our visual exploration, we can see that while the species are very similar, there are species differentiation observed when examining green leaves and canopy length.
 
 ```{r}
 #| label: fig-combined_plot
-#| fig-cap: 'Insert'
+#| fig-cap: 'Comparison of species Sabal etonia and Serenoa repens reveals differences and similarities in predictor variables. In combined boxplots, (counter-clockwise from left) we observe a higher count of green leaves in S. repens. In canopy length, we see a higher canopy length in S. etonia. Canopy width and height exhibit similar counts.'
 combinedplot <- plot1 + plot2 + plot3 + plot4
 combinedplot
 ```
 
 # Models:
 
-The models used are as follows:
+To determine whether a plant is *Serenoa repens* or *Sabal etonia*, we need to conduct a binary logistic regression using several predictor variables. We will perform the analysis twice comparing the following models:
 
 -   Model 1: The log odds of plant type using plant height, canopy length, canopy width, and green leaves as predictor variables.
--   Model 2: The log odds of plant type using plant height, canopy width, and green leaves (i.e., excluding canopy length for this model).
+-   Model 2: The log odds of plant type using plant height, canopy width, and green leaves (excluding canopy length for this model).
 
 Note that *S. repens* = speices 1 and *S. etonia* = species 2.
 
@@ -195,17 +197,17 @@ blr1 <- glm(formula = f1, data = palmetto, family = binomial)
 
 blr2 <- glm(formula = f2, data = palmetto, family = binomial)
 
-# Summarize:
-summary(blr1)
-summary(blr2)
+# # Summarize:
+# summary(blr1)
+# summary(blr2)
 
 ```
 
-COEF tell us LOG ODDS:
+The coefficients from the binary logistic regression analysis offer insights into the log odds of the predictor variables. In model f1, all predictors have p-values \< 0.5, indicating significance. However, upon removing canopy height from the model in f2, the p-value for height is \> 0.5, suggesting it is no longer a suitable predictor variable. Additionally, Model f1 presents an AIC of 5194.6, while f2 shows an AIC of 5987.5, indicating that f1 is the preferred model.
 
-green leaves has largest effect on log odds. wtf is going on w height - tbd
+# Repeated Cross Validation:
 
-# Workflow:
+Next we need to utilize repeated cross-validation (ten-fold cross-validation) using tidymodels for both models.
 
 ```{r}
 # Set seed
@@ -234,18 +236,25 @@ blr_fit_folds1 <- blr_wf1 %>%
 blr_fit_folds2 <- blr_wf2 %>%
   fit_resamples(surv_folds)
 
-blr_fit_folds1
-blr_fit_folds2
+# blr_fit_folds1
+# blr_fit_folds2
 
-# Metrics:
-collect_metrics(blr_fit_folds1)
-collect_metrics(blr_fit_folds2)
+# # Metrics:
+# collect_metrics(blr_fit_folds1)
+# collect_metrics(blr_fit_folds2)
 
 ```
 
-choose the best performing model, and finally we then run the binary logistic regression on the whole dataset, using the appropriate model, something like (if we decided f1 was the best model):
+The metrics show:
 
-Run On Entire Dataset:
+-   F1 has a mean accuracy of approximately 92% and a mean ROC of approximately 97%.
+-   F2 has a mean accuracy of approximately 90% and a mean ROC of approximately 96%.
+
+Based on these metrics, F1 appears to be the better performing model, as it has higher values for both accuracy and ROC.
+
+# Train on Full Dataset:
+
+Now that we have decided the F1 is the better predicting model, we want to train the model on the entire dataset.
 
 ```{r}
 blr_fit_full <- blr_mdl %>%
@@ -255,45 +264,45 @@ palmetto_predict <- palmetto %>%
   mutate(predict(blr_fit_full,new_data = .))
 ```
 
-TABLE - is this right?
+The results of the BLR model are presented below:
 
 ```{r}
+#| label: fig-table
+#| fig-cap: "Binary logistic regression results for the F1 model applied to the entire Palmetto dataset."
 # Broom::Tidy 
 tidy_output <- tidy(blr_fit_full)
 
-# Create kable table
-final_table <- kable(tidy_output, align = "c") %>%
+# Create kable table with title
+coef_table <- kable(tidy_output, align = "c")%>%
   kable_styling() 
 
-save_kable(final_table, file = "plots/kable_table.html")
-
+coef_table
 ```
 
+To assess the model's accuracy for identifying plant species correctly, we need to introduce a conditional argument: if the predicted probability is greater than or equal to 50%, the plant is classified as species 1; otherwise, it is classified as species 2. We can then construct a table illustrating the count of correctly and incorrectly classified plants from the original dataset by the model, as well as a column displaying the percentage of plants correctly classified.
 
 ```{r}
 # Calculate predicted species based on probabilities and 50% cutoff
 palmetto_predict_prob<- augment(blr_fit_full, new_data = palmetto, type.predict = 'response') %>% 
-    mutate(predicted_species = ifelse(.pred_1 > 0.5, "1", "2")) %>%
+    mutate(predicted_species = ifelse(.pred_1 >= 0.5, "1", "2")) %>%
   select(predicted_species, everything())
-
-head(palmetto_predict_prob)
 
 ```
 
 ```{r}
 # Create a table of observed and predicted species
 
-results_table <- table(palmetto_predict_prob %>% 
-  select(predicted_species, species))
+# results_table <- table(palmetto_predict_prob %>% 
+#   select(predicted_species, species))
+# 
+# tidy(results_table)
 
-tidy(results_table)
-
-species <- c('S.Repens', 'S. Etonia')
+species <- c('S. Repens', 'S. Etonia')
 predict_correct <- c(5548,5701)
 predict_incorrect <- c(564,454)
 percent_correct <- c(91,93)
 
-species <- c('S.Repens', 'S. Etonia')
+species <- c('S. Repens', 'S. Etonia')
 predict_correct <- c(5548, 5701)
 predict_incorrect <- c(564, 454)
 percent_correct <- c(91, 93)
@@ -302,39 +311,11 @@ percent_correct <- c(91, 93)
 species_correct <- data.frame(species, predict_correct, predict_incorrect, percent_correct)
 
 #kable it
-species_kable <- kable(species_correct, align = "c") %>%
+species_correct_kable <- kable(species_correct, align = "c") %>%
   kable_styling() 
 
-save_kable(species_kable, file = "plots/species_table.html")
+species_correct_kable
 
 
-```
 
-```{r}
-# classification_table <- data.frame(
-#   Observed_Species = palmetto$species,
-#   Predicted_Species = palmetto_predict_prob$predicted_species
-# )
-# 
-# # Count correct/incorrect classifications
-# correctly_classified <- sum(classification_table$Observed_Species == classification_table$Predicted_Species)
-# incorrectly_classified <- sum(classification_table$Observed_Species != classification_table$Predicted_Species)
-# 
-# # Percentage correct/incorrect classifications
-# percentage_correct <- prop.table(table(classification_table$Observed_Species == classification_table$Predicted_Species)) * 100
-# 
-# percentage_correct
-# 
-# # Create a finalized table
-# final_table_2 <- cbind(
-#   table(classification_table$Observed_Species, classification_table$Predicted_Species),
-#   "% Correctly Classified" = percentage_correct
-# )
-# 
-# # caption????
-# # caption <- "Classification Results of Logistic Regression Model with 50% Cutoff"
-# 
-# # Print finalized table with caption
-# kable(final_table_2, caption = caption, align = "c")
-# save_kable(final_table_2, file = "plots/final_table_2.html")
 ```
