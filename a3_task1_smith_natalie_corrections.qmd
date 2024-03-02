@@ -17,9 +17,9 @@ execute:
 
 # Overview:
 
-The Florida palmetto data examines the survival, growth, and biomass estimates of two dominant palmetto species, *Serenoa repens* and *Sabal etonia*, in south Florida from 1981 to 2017, recorded at 5-year intervals. The dataset encompasses various variables, but for this analysis, we will focus on canopy height, length, and width, as well as green leaves.
+The palmetto data examines the survival, growth, and biomass estimates of two dominant palmetto species, *Serenoa repens* and *Sabal etonia*, in south Florida from 1981 to 2017, recorded at 5-year intervals. The dataset encompasses various variables, but for this analysis, we will focus on canopy height, length, and width, as well as green leaves.
 
-We aim to create two predictive models with different predictor variable to determine which variables are better at predicting the plant species. Two models with different predictor variables will be created, and the better-performing model will be selected. We will then evaluate the success of the chosen model in correctly classifying a plant species.
+We aim to create two models with different predictor variables and the better-performing model will be selected. We will then evaluate the success of the chosen model in correctly classifying a plant species.
 
 ::: image-grid
 ![Left: Sabal etonia, Right: Serenoa repens](misc/palms.jpg)
@@ -173,7 +173,7 @@ Based on our visual exploration, we can see that while the species are very simi
 
 ```{r}
 #| label: fig-combined_plot
-#| fig-cap: 'Comparison of species Sabal etonia and Serenoa repens reveals differences and similarities in predictor variables. In combined boxplots, (counter-clockwise from left) we observe a higher count of green leaves in S. repens. In canopy length, we see a higher canopy length in S. etonia. Canopy width and height exhibit similar counts.'
+#| fig-cap: 'Comparison of species Sabal etonia and Serenoa repens reveals differences and similarities in predictor variables. In combined boxplots, (counter-clockwise from left) we observe a higher count of green leaves in S. repens. In canopy length, we see greater canopy length in S. etonia. Canopy width and height exhibit similar counts.'
 combinedplot <- plot1 + plot2 + plot3 + plot4
 combinedplot
 ```
